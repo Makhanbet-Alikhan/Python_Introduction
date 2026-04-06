@@ -9,7 +9,7 @@ items = []
 prices = []
 
 while True:
-    name = input("Enter item name (or 'done' to finish)")
+    name = input("Enter item name (or 'done' to finish): ")
     if name == "done":
         break
     items.append(name)
