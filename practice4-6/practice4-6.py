@@ -67,5 +67,4 @@ print("final exam score > 95:", len(list(filter(lambda x: float(x["final_exam_sc
 print("GPA values: ", list(map(lambda x: x["GPA"], students))[:5])
 print("assignment_score > 90: ", len(list(filter(lambda x: float(x["assignment_score"]) >= 90, students))))
 
-
 load_data("adw.csv")
