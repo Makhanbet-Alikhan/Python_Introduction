@@ -1,7 +1,6 @@
 import os
 import csv
 import json
-from ctypes import HRESULT
 
 
 class FileManager:
