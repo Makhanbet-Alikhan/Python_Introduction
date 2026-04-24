@@ -1,70 +1,84 @@
 import os
 import csv
 import json
+from ctypes import HRESULT
 
 
-def check_files():
-    t = False
-    if os.path.exists('students.csv'):
-        print("File exists")
-        t = True
-    else:
-        print("File doesn't exist")
+class FileManager:
+    def __init__(self, filename):
+        self.filename = filename
 
-    if os.path.exists('output/'):
-        print("Folder exists")
-    else:
-        print("Folder doesn't exist")
-        os.mkdir('output')
-    return t
+    def check_files(self):
+        t = False
+        if os.path.exists(self.filename):
+            print("File exists")
+            t = True
+        else:
+            print("File doesn't exist")
+        return t
 
-def load_data(name):
-    try:
-        df = open(name, encoding='utf-8')
-        reader = csv.DictReader(df)
-        return list(reader)
-    except FileNotFoundError:
-        print("File doesn't exist")
-    except Exception as e:
-        print("ERROR", e)
+    def create_output_folder(self, folder='output'):
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        else:
+            print("Folder already exists")
 
-def preview_data(students, n=5):
+class DataLoader:
+    def __init__(self,filename):
+        self.filename = filename
+        self.students = []
 
-    print(f'First {n} rows of students:')
-    print('-' * 30)
-    for row in students[:n]:
-        print(row)
-    print('-' * 30)
-
-def get_top_students(students, n=10):
-    valid_students = []
-
-    for row in students:
+    def load(self):
         try:
-            row["final_exam_score"] = float(row["final_exam_score"])
-            valid_students.append(row)
-        except ValueError:
-            print(f"Warning: skipping row with invalid final_exam_score: {row['final_exam_score']}")
-            continue
+            df = open(self.filename)
+            self.students = list(csv.DictReader(df))
+            return self.students
+        except FileNotFoundError:
+            print("File doesn't exist")
 
-    top = sorted(valid_students, key=lambda x: x["final_exam_score"], reverse=True)[:n]
-    print("-" * 30)
-    print(f'Top {n} Students by Exam Score')
-    print("-" * 30)
-    for i in range(len(top)):
-        print(top[i])
-    print("-" * 30)
-    return top
-check_files()
-students = load_data('students.csv')
+    def preview(self, n = 5):
+        for i in range(n):
+            print(f'Student {self.students[i]['student_id']}: {self.students[i]["age"], self.students[i]["gender"], self.students[i]["country"] ,self.students[i]["GPA"]}')
 
-print(preview_data(students))
-print(get_top_students(students))
-print('-'*30)
-print("Lambda / Map / Filter")
-print("-"*30)
-print("final exam score > 95:", len(list(filter(lambda x: float(x["final_exam_score"]) >= 95, students))))
-print("GPA values: ", list(map(lambda x: x["GPA"], students))[:5])
-print("assignment_score > 90: ", len(list(filter(lambda x: float(x["assignment_score"]) >= 90, students))))
+class DataAnalyzer:
+    def __init__(self, students):
+        self.students = students
+        self.result = {}
 
-load_data("adw.csv")
+    def analyse(self, n=10):
+        self.result = (sorted(self.students, key=lambda x: x["final_exam_score"], reverse=True)[:n])
+        return self.result
+    def print_results(self):
+        for i in self.result:
+            print(i)
+
+class ResultSaver:
+    def __init__(self, result, output_path):
+        self.result = result
+        self.output_path = output_path
+    def save_json(self):
+        try:
+            with open(self.output_path, "w") as f:
+                json.dump(self.result, f, indent=4)
+                print("Results saved")
+        except FileNotFoundError:
+            print("File doesn't exist")
+
+fm = FileManager("students.csv")
+
+if not fm.check_files():
+    print("File doesn't exist")
+    exit(0)
+fm.create_output_folder()
+
+dl = DataLoader("students.csv")
+dl.load()
+dl.preview()
+
+analyser = DataAnalyzer(dl.students)
+analyser.analyse(10)
+analyser.print_results()
+
+saver = ResultSaver(analyser.result, 'output/result.json')
+saver.save_json()
+
